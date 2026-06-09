@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>病毒閃避泡泡</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#060c14;overflow:hidden;width:100vw;height:100vh;touch-action:none;user-select:none;font-family:sans-serif;}
+#g{position:relative;width:100vw;height:100vh;}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+#hud{position:absolute;top:8px;left:0;width:100%;display:flex;justify-content:space-around;pointer-events:none;padding:0 8px;gap:4px;z-index:2;}
+.hp{background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:rgba(255,255,255,0.6);font-size:11px;text-align:center;}
+.hp b{color:#7ee8ff;font-size:14px;display:block;}
+#lvlbadge{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(74,184,245,0.2);border:1px solid rgba(74,184,245,0.4);border-radius:99px;padding:4px 14px;color:#7ee8ff;font-size:11px;font-weight:700;pointer-events:none;z-index:2;opacity:0;transition:opacity 0.4s;}
+#msg{position:absolute;bottom:12px;left:0;width:100%;text-align:center;color:rgba(255,255,255,0.35);font-size:12px;pointer-events:none;z-index:2;}
+#ov{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,12,20,0.93);z-index:10;padding:24px;}
+.ov-icon{font-size:56px;margin-bottom:12px;}
+.ov-h2{color:white;font-size:21px;font-weight:700;margin-bottom:8px;text-align:center;}
+.ov-p{color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:22px;text-align:center;line-height:1.9;padding:0 24px;}
+.btn{background:transparent;border:1px solid rgba(255,255,255,0.35);color:white;padding:12px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin:4px;font-family:sans-serif;width:240px;text-align:center;text-decoration:none;display:block;}
+.btn-pink{background:linear-gradient(135deg,#ff6bcd,#ff3399);border:none;color:white;}
+</style>
+</head>
+<body>
+<div id="g">
+  <canvas id="c"></canvas>
+  <div id="hud">
+    <div class="hp"><b id="hScore">0</b>分</div>
+    <div class="hp"><b id="hTime">0.0</b>秒</div>
+    <div class="hp"><b id="hDodge">0</b>閃避</div>
+  </div>
+  <div id="lvlbadge">Lv1</div>
+  <div id="msg">手指左右滑動控制病毒</div>
+  <div id="ov">
+    <div class="ov-icon">🦠</div>
+    <div class="ov-h2">病毒閃避泡泡</div>
+    <div class="ov-p">用手指左右控制病毒<br>閃避從天而降的泡泡！<br>越撐越難，撐越久分數越高 🫧</div>
+    <button class="btn" onclick="startGame()">開始挑戰 →</button>
+  </div>
+</div>
+<script>
+var cv=document.getElementById('c'),ctx=cv.getContext('2d');
+var W,H,virus,bubbles,state='idle',gameTime=0,score=0,dodgeCount=0;
+var lastT=null,raf=null,spawnTimer=0,lvl=1,lastLvl=0;
+
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+
+// ── 音效引擎 ──
+var audioCtx = null;
+function getAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playDodge(){
+  // 輕快的「咻」聲
+  try{
+    var ac=getAudio();
+    var o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.type='sine';
+    o.frequency.setValueAtTime(600,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1200,ac.currentTime+0.08);
+    g.gain.setValueAtTime(0.18,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.12);
+    o.start();o.stop(ac.currentTime+0.12);
+  }catch(e){}
+}
+
+function playLevelUp(){
+  // 升級音效：三個音往上
+  try{
+    var ac=getAudio();
+    var freqs=[523,659,784];
+    for(var i=0;i<3;i++){
+      (function(freq,delay){
+        var o=ac.createOscillator(),g=ac.createGain();
+        o.connect(g);g.connect(ac.destination);
+        o.type='triangle';
+        o.frequency.setValueAtTime(freq,ac.currentTime+delay);
+        g.gain.setValueAtTime(0,ac.currentTime+delay);
+        g.gain.linearRampToValueAtTime(0.18,ac.currentTime+delay+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+0.18);
+        o.start(ac.currentTime+delay);
+        o.stop(ac.currentTime+delay+0.2);
+      })(freqs[i],i*0.12);
+    }
+  }catch(e){}
+}
+
+function playHit(){
+  // 被打到：低沉爆破聲
+  try{
+    var ac=getAudio();
+    // 噪音爆破
+    var bufSize=ac.sampleRate*0.3;
+    var buf=ac.createBuffer(1,bufSize,ac.sampleRate);
+    var data=buf.getChannelData(0);
+    for(var i=0;i<bufSize;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,2);
+    var src=ac.createBufferSource();
+    src.buffer=buf;
+    var g=ac.createGain();
+    g.gain.setValueAtTime(0.6,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);
+    var filter=ac.createBiquadFilter();
+    filter.type='lowpass';filter.frequency.value=400;
+    src.connect(filter);filter.connect(g);g.connect(ac.destination);
+    src.start();
+    // 加一個低音
+    var o=ac.createOscillator(),og=ac.createGain();
+    o.connect(og);og.connect(ac.destination);
+    o.type='sine';o.frequency.setValueAtTime(120,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(40,ac.currentTime+0.25);
+    og.gain.setValueAtTime(0.4,ac.currentTime);
+    og.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.25);
+    o.start();o.stop(ac.currentTime+0.25);
+  }catch(e){}
+}
+
+function playBgTick(t){
+  // 背景心跳感（每秒）
+  try{
+    var ac=getAudio();
+    var o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.type='sine';o.frequency.value=55;
+    g.gain.setValueAtTime(0.06,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.08);
+    o.start();o.stop(ac.currentTime+0.08);
+  }catch(e){}
+}
+
+
+function getDiff(){
+  // 難度隨時間平滑上升
+  return 1+gameTime/20;
+}
+function getLevel(){
+  if(gameTime<10) return 1;
+  if(gameTime<20) return 2;
+  if(gameTime<35) return 3;
+  if(gameTime<55) return 4;
+  if(gameTime<80) return 5;
+  return 6;
+}
+function getSpawnInterval(){
+  return Math.max(0.25, 1.8/getDiff());
+}
+function getBubbleSpeed(){
+  return (2.0+Math.random()*1.2)*getDiff()*0.75;
+}
+function getCountPerSpawn(){
+  return Math.min(5, 1+Math.floor(gameTime/18));
+}
+
+function startGame(){
+  document.getElementById('ov').style.display='none';
+  resize();
+  virus={x:W/2,y:H-42,r:20,targetX:W/2};
+  bubbles=[];state='playing';gameTime=0;score=0;dodgeCount=0;spawnTimer=0;lvl=1;lastLvl=0;
+  lastT=null;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+}
+
+function spawnBubble(){
+  var r=13+Math.random()*28;
+  var speed=getBubbleSpeed();
+  speed=Math.min(speed,16);
+  var x=r+Math.random()*(W-r*2);
+  bubbles.push({x:x,y:-r-5,r:r,vy:speed,hue:180+Math.random()*180});
+}
+
+function showLvlBadge(lv){
+  var el=document.getElementById('lvlbadge');
+  el.textContent='Level '+lv+' 🦠';
+  el.style.opacity=1;
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){el.style.opacity=0;},1800);
+}
+
+function loop(ts){
+  if(state!=='playing') return;
+  var dt=lastT?Math.min((ts-lastT)/1000,0.05):0.016;
+  lastT=ts;gameTime+=dt;score=Math.floor(gameTime*10);
+  spawnTimer+=dt;
+
+  // 等級提示
+  lvl=getLevel();
+  if(lvl!==lastLvl){lastLvl=lvl;showLvlBadge(lvl);playLevelUp();}
+
+  if(spawnTimer>=getSpawnInterval()){
+    spawnTimer=0;
+    var cnt=getCountPerSpawn();
+    for(var i=0;i<cnt;i++) spawnBubble();
+  }
+
+  // 病毒只左右
+  virus.x+=(virus.targetX-virus.x)*0.18;
+  virus.x=Math.max(virus.r,Math.min(W-virus.r,virus.x));
+
+  // 更新泡泡
+  var hit=false;
+  for(var i=bubbles.length-1;i>=0;i--){
+    var b=bubbles[i];
+    b.y+=b.vy;
+    if(b.y-b.r>H){bubbles.splice(i,1);dodgeCount++;score+=10;playDodge();continue;}
+    var dx=b.x-virus.x,dy=b.y-virus.y;
+    if(Math.sqrt(dx*dx+dy*dy)<b.r+virus.r-8){hit=true;break;}
+  }
+  if(hit){state='dead';playHit();setTimeout(showResult,500);return;}
+
+  // DRAW
+  ctx.clearRect(0,0,W,H);
+  var bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#060c14');bg.addColorStop(0.85,'#07110a');bg.addColorStop(1,'#091409');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // 星星
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  for(var i=0;i<40;i++){ctx.beginPath();ctx.arc((i*137.5)%W,(i*89.3)%(H*0.85),0.6,0,Math.PI*2);ctx.fill();}
+  // 地面
+  ctx.fillStyle='rgba(80,180,80,0.1)';ctx.fillRect(0,H-24,W,24);
+  ctx.strokeStyle='rgba(100,220,100,0.22)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H-24);ctx.lineTo(W,H-24);ctx.stroke();
+
+  // 泡泡落地預警陰影
+  for(var i=0;i<bubbles.length;i++){
+    var b=bubbles[i];
+    var a=Math.max(0,Math.min(0.25,(b.y+b.r)/(H*0.75)));
+    ctx.save();ctx.globalAlpha=a;
+    ctx.beginPath();ctx.ellipse(b.x,H-18,b.r*0.55,5,0,0,Math.PI*2);
+    ctx.fillStyle='hsla('+b.hue+',70%,70%,1)';ctx.fill();ctx.restore();
+  }
+
+  // 泡泡
+  for(var i=0;i<bubbles.length;i++){
+    var b=bubbles[i];
+    ctx.save();
+    var g=ctx.createRadialGradient(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.04,b.x,b.y,b.r);
+    g.addColorStop(0,'rgba(255,255,255,0.92)');
+    g.addColorStop(0.3,'hsla('+b.hue+',70%,80%,0.4)');
+    g.addColorStop(0.8,'hsla('+b.hue+',65%,60%,0.12)');
+    g.addColorStop(1,'hsla('+b.hue+',60%,50%,0.45)');
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fillStyle=g;ctx.fill();
+    ctx.strokeStyle='hsla('+b.hue+',70%,85%,0.7)';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.beginPath();ctx.arc(b.x-b.r*0.28,b.y-b.r*0.3,b.r*0.17,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.75)';ctx.fill();
+    ctx.restore();
+  }
+
+  // 病毒
+  drawVirus(virus.x,virus.y,virus.r);
+
+  if(Math.floor(gameTime)>Math.floor(gameTime-dt)) playBgTick();
+  document.getElementById('hScore').textContent=score;
+  document.getElementById('hTime').textContent=gameTime.toFixed(1);
+  document.getElementById('hDodge').textContent=dodgeCount;
+
+  raf=requestAnimationFrame(loop);
+}
+
+function drawVirus(x,y,r){
+  ctx.save();
+  var vg=ctx.createRadialGradient(x-r*0.2,y-r*0.2,r*0.1,x,y,r);
+  vg.addColorStop(0,'#aaff77');vg.addColorStop(0.6,'#44cc22');vg.addColorStop(1,'#1a5500');
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=vg;ctx.fill();
+  ctx.strokeStyle='rgba(150,255,100,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+  var spikes=8;
+  for(var i=0;i<spikes;i++){
+    var a=i*(Math.PI*2/spikes)+(gameTime*1.8);
+    ctx.beginPath();ctx.arc(x+Math.cos(a)*(r+7),y+Math.sin(a)*(r+7),4,0,Math.PI*2);
+    ctx.fillStyle='#88ff44';ctx.fill();
+  }
+  ctx.fillStyle='white';
+  ctx.beginPath();ctx.arc(x-r*0.28,y-r*0.1,r*0.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+r*0.28,y-r*0.1,r*0.2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.arc(x-r*0.26,y-r*0.07,r*0.11,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+r*0.3,y-r*0.07,r*0.11,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#113300';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(x,y+r*0.28,r*0.18,0.1,Math.PI-0.1);ctx.stroke();
+  ctx.restore();
+}
+
+function showResult(){
+  var ov=document.getElementById('ov');
+  var icon=gameTime>=45?'🏆':gameTime>=20?'⭐':'🦠';
+  var title=gameTime>=45?'泡泡大師！':gameTime>=20?'閃避高手！':'被泡泡擊中了！';
+  var h='<div class="ov-icon">'+icon+'</div>';
+  h+='<div class="ov-h2">'+title+'</div>';
+  h+='<div class="ov-p">撐了 '+gameTime.toFixed(1)+' 秒　得分 '+score+'<br>閃避成功 '+dodgeCount+' 顆泡泡　最高 Level '+lvl+'</div>';
+  h+='<a href="https://bobojoi.com/blog/bubble-art-summer-camp-2025" target="_blank" class="btn btn-pink">🎈 了解暑期夏令營</a>';
+  h+='<button class="btn" onclick="startGame()">再挑戰</button>';
+  ov.innerHTML=h;ov.style.display='flex';
+}
+
+cv.addEventListener('touchstart',function(e){e.preventDefault();try{getAudio().resume();}catch(e2){}if(state!=='playing')return;var r=cv.getBoundingClientRect();virus.targetX=(e.touches[0].clientX-r.left)*(W/r.width);},{passive:false});
+cv.addEventListener('touchmove',function(e){e.preventDefault();if(state!=='playing')return;var r=cv.getBoundingClientRect();virus.targetX=(e.touches[0].clientX-r.left)*(W/r.width);},{passive:false});
+cv.addEventListener('mousemove',function(e){if(state!=='playing')return;var r=cv.getBoundingClientRect();virus.targetX=(e.clientX-r.left)*(W/r.width);});
+window.addEventListener('resize',function(){if(state==='playing')resize();});
+</script>
+</body>
+</html>

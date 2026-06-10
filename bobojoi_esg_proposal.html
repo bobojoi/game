@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bobojoi 泡泡家族 × ESG 藝術公益合作提案</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --blue:#0057B8; --sky:#00AADD; --navy:#0A1628;
+  --accent:#00C9A7; --gray:#6B7A8D;
+  --bg:linear-gradient(140deg,#0A1628 0%,#0D2B50 55%,#061520 100%);
+}
+body {
+  font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;
+  background:#0A0F1E; overflow:hidden; height:100vh; user-select:none;
+}
+.viewport { width:100vw; height:100vh; overflow:hidden; position:relative; }
+.track {
+  display:flex; width:100%; height:100%;
+  transition:transform 0.45s cubic-bezier(0.4,0,0.2,1);
+}
+.slide {
+  min-width:100vw; height:100vh;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  padding:44px 72px; position:relative; overflow:hidden;
+  background:var(--bg);
+}
+.bdeco { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.bdeco svg { width:100%; height:100%; }
+
+/* 導覽 */
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; z-index:999; }
+.dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.25); cursor:pointer; transition:all 0.3s; }
+.dot.on { background:var(--sky); width:24px; border-radius:4px; }
+.nbtn { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); color:white; padding:6px 18px; border-radius:20px; cursor:pointer; font-size:14px; transition:background 0.2s; }
+.nbtn:hover { background:rgba(255,255,255,0.2); }
+.ncount { color:rgba(255,255,255,0.38); font-size:13px; min-width:44px; text-align:center; }
+.hint { position:fixed; top:16px; right:20px; color:rgba(255,255,255,0.2); font-size:12px; z-index:999; }
+
+/* 共用排版 */
+.lbl { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; color:var(--sky); }
+.h1 { font-size:clamp(26px,3.5vw,44px); font-weight:900; line-height:1.25; margin-bottom:28px; color:white; }
+.box { width:100%; max-width:960px; position:relative; z-index:1; }
+
+/* 玻璃卡片 */
+.glass { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:16px; }
+.glass-med { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:14px; }
+
+/* ══ S1 封面 ══ */
+#s1 { text-align:center; }
+.stag { display:inline-block; padding:5px 18px; border-radius:20px; margin-bottom:24px; background:rgba(0,170,221,0.15); border:1px solid rgba(0,170,221,0.35); color:var(--sky); font-size:13px; letter-spacing:2px; }
+#s1 h1 { font-size:clamp(28px,3.8vw,50px); font-weight:900; color:white; line-height:1.3; margin-bottom:16px; }
+#s1 h1 em { color:var(--sky); font-style:normal; }
+#s1 p { font-size:clamp(14px,1.7vw,19px); color:rgba(255,255,255,0.55); line-height:1.85; margin-bottom:40px; }
+.brand { display:flex; align-items:center; justify-content:center; gap:18px; }
+.logo-wrap { height:50px; background:white; border-radius:12px; padding:8px 16px; box-shadow:0 0 28px rgba(0,170,221,0.25); display:flex; align-items:center; }
+.logo-wrap img { height:100%; width:auto; }
+.brand-name { color:white; font-size:19px; font-weight:700; }
+.brand-sub { color:rgba(255,255,255,0.4); font-size:12px; margin-top:3px; }
+
+/* ══ S2 關於我們 ══ */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.lead { font-size:15px; color:rgba(255,255,255,0.75); line-height:1.85; margin-bottom:20px; }
+.badges { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.badge { background:rgba(0,170,221,0.12); border:1px solid rgba(0,170,221,0.3); color:var(--sky); padding:4px 12px; border-radius:20px; font-size:12.5px; font-weight:600; }
+.stats3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.stat { background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px; text-align:center; }
+.sn { font-size:30px; font-weight:900; color:var(--sky); line-height:1; }
+.sl { font-size:11.5px; color:rgba(255,255,255,0.55); margin-top:3px; }
+.award-photo { border-radius:14px; overflow:hidden; box-shadow:0 6px 28px rgba(0,0,0,0.35); height:268px; }
+.award-photo img { width:100%; height:100%; object-fit:cover; object-position:center top; }
+.award-lbl { margin-top:8px; text-align:center; font-size:12px; color:rgba(255,255,255,0.4); font-weight:600; }
+
+/* ══ S3 ESG ══ */
+.esg3 { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.ecard { border-radius:20px; padding:26px 22px; color:white; position:relative; overflow:hidden; }
+.ecard.e { background:linear-gradient(135deg,#083D1F,#0A5C2D); }
+.ecard.s { background:linear-gradient(135deg,#091F5C,#0D2F8A); }
+.ecard.g { background:linear-gradient(135deg,#3A0A28,#620D44); }
+.ebig { font-size:72px; font-weight:900; opacity:0.12; position:absolute; top:-10px; right:8px; }
+.et { font-size:26px; font-weight:800; margin-bottom:3px; }
+.es { font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:16px; }
+.ecard ul { list-style:none; }
+.ecard ul li { font-size:13.5px; color:rgba(255,255,255,0.82); line-height:1.6; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; gap:8px; align-items:flex-start; }
+.ecard ul li::before { content:"✦"; color:var(--sky); font-size:9px; margin-top:5px; flex-shrink:0; }
+.ecard ul li:last-child { border-bottom:none; }
+
+/* ══ S4 服務方案 ══ */
+.scards { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.scard { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1); border-radius:20px; padding:26px 22px; transition:transform 0.2s, border-color 0.2s; }
+.scard:hover { transform:translateY(-4px); border-color:rgba(0,170,221,0.4); }
+.sico { width:48px; height:48px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:12px; background:rgba(255,255,255,0.08); }
+.sname { font-size:16px; font-weight:800; color:white; margin-bottom:7px; }
+.sdesc { font-size:13px; color:rgba(255,255,255,0.6); line-height:1.7; margin-bottom:16px; }
+.sprice { font-size:21px; font-weight:900; color:var(--sky); }
+.sprice span { font-size:12px; color:rgba(255,255,255,0.45); font-weight:400; }
+.snote { font-size:11.5px; color:rgba(255,255,255,0.45); margin-top:3px; }
+.pat { display:inline-block; background:linear-gradient(135deg,var(--accent),#00A88A); color:white; font-size:11px; font-weight:700; padding:2px 9px; border-radius:10px; margin-bottom:7px; }
+
+/* ══ S5 成功案例 ══ */
+#s5 { padding:36px 72px; }
+.case-top { display:grid; grid-template-columns:1fr 1.5fr; gap:20px; margin-bottom:16px; }
+.cleft { background:rgba(0,87,184,0.25); border:1px solid rgba(0,170,221,0.25); border-radius:20px; padding:26px 22px; color:white; }
+.cco { font-size:20px; font-weight:800; margin-bottom:3px; }
+.cpa { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:16px; }
+.camount { font-size:44px; font-weight:900; color:var(--sky); line-height:1; }
+.cal { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:16px; }
+.cmeta { display:flex; flex-direction:column; gap:7px; }
+.mrow { display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(255,255,255,0.75); }
+.mdot { width:5px; height:5px; border-radius:50%; background:var(--sky); flex-shrink:0; }
+.cright { display:flex; flex-direction:column; gap:10px; }
+.rcard { background:rgba(255,255,255,0.07); border-radius:13px; padding:14px 18px; border-left:3px solid var(--blue); }
+.rcard.g { border-color:var(--accent); }
+.rn { font-size:30px; font-weight:900; color:var(--sky); line-height:1; }
+.rcard.g .rn { color:var(--accent); }
+.rl { font-size:12px; color:rgba(255,255,255,0.55); margin-top:2px; }
+.qt-card { background:rgba(0,170,221,0.08); border-radius:13px; padding:14px 18px; border-left:3px solid var(--sky); }
+.qt { font-size:13px; color:rgba(255,255,255,0.8); line-height:1.8; font-style:italic; }
+.qs { font-size:11.5px; color:rgba(255,255,255,0.4); margin-top:7px; font-weight:600; }
+.photo-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.ph { border-radius:12px; overflow:hidden; height:140px; }
+.ph img { width:100%; height:100%; object-fit:cover; }
+
+/* ══ S6 互動報價 ══ */
+.calc-wrap { width:100%; max-width:820px; display:grid; grid-template-columns:1.2fr 1fr; gap:22px; }
+.calc-left { display:flex; flex-direction:column; gap:10px; }
+.citem { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px 18px; transition:background 0.2s, border-color 0.2s; }
+.citem.active { background:rgba(0,170,221,0.1); border-color:rgba(0,170,221,0.35); }
+.citem-top { display:flex; align-items:center; justify-content:space-between; }
+.citem-name { color:white; font-size:14.5px; font-weight:700; }
+.citem-desc { font-size:11.5px; color:rgba(255,255,255,0.42); margin-top:3px; }
+.price-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.price-row label { color:rgba(255,255,255,0.65); font-size:12.5px; white-space:nowrap; }
+.price-input {
+  flex:1; min-width:0; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+  color:var(--sky); padding:6px 10px; border-radius:8px; font-size:15px; font-weight:700;
+}
+.price-input:focus { outline:none; border-color:var(--sky); background:rgba(0,170,221,0.1); }
+.price-hint { font-size:11px; color:rgba(255,255,255,0.35); white-space:nowrap; }
+.qty-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.qty-row label { color:rgba(255,255,255,0.65); font-size:12.5px; }
+.qty-input { width:72px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:white; padding:5px 8px; border-radius:8px; font-size:14px; font-weight:700; text-align:center; }
+.qty-input:focus { outline:none; border-color:var(--sky); }
+.qty-sub { color:rgba(255,255,255,0.45); font-size:12px; }
+/* toggle */
+.tog { position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; }
+.tog input { opacity:0; width:0; height:0; }
+.tog-slider { position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.18); border-radius:22px; transition:0.3s; }
+.tog-slider:before { content:""; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s; }
+.tog input:checked + .tog-slider { background:var(--sky); }
+.tog input:checked + .tog-slider:before { transform:translateX(18px); }
+/* 右側摘要 */
+.calc-right { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px; display:flex; flex-direction:column; }
+.summary-title { color:rgba(255,255,255,0.4); font-size:11px; letter-spacing:2px; margin-bottom:14px; }
+.summary-rows { flex:1; display:flex; flex-direction:column; gap:8px; }
+.srow { display:flex; justify-content:space-between; font-size:13px; }
+.srow .sn2 { color:rgba(255,255,255,0.65); }
+.srow .sv { color:white; font-weight:600; }
+.srow.hidden { display:none; }
+.divider { border:none; border-top:1px solid rgba(255,255,255,0.1); margin:12px 0; }
+.total-row { display:flex; justify-content:space-between; align-items:center; }
+.total-label { color:white; font-size:15px; font-weight:700; }
+.total-num { color:var(--sky); font-size:26px; font-weight:900; }
+.calc-note { margin-top:14px; font-size:11.5px; color:rgba(255,255,255,0.32); line-height:1.7; }
+.cta-btn { margin-top:14px; padding:11px; border-radius:12px; text-align:center; background:linear-gradient(135deg,var(--blue),var(--sky)); color:white; font-size:14px; font-weight:700; cursor:pointer; transition:opacity 0.2s; }
+.cta-btn:hover { opacity:0.85; }
+
+/* ══ S7 合作流程 ══ */
+.flow5 { display:flex; align-items:flex-start; width:100%; }
+.fstep { flex:1; text-align:center; position:relative; }
+.fstep::after { content:"→"; position:absolute; right:-14px; top:16px; font-size:18px; color:var(--sky); opacity:0.6; }
+.fstep:last-child::after { display:none; }
+.fnum { width:50px; height:50px; border-radius:50%; margin:0 auto 10px; background:linear-gradient(135deg,var(--blue),var(--sky)); color:white; font-size:19px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,87,184,0.4); }
+.flabel { font-size:14px; font-weight:700; color:white; margin-bottom:4px; }
+.fsub { font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; }
+.notes-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:32px; }
+.note-card { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:18px; display:flex; gap:12px; align-items:flex-start; }
+.note-ico { font-size:22px; flex-shrink:0; }
+.note-title { font-size:14px; font-weight:700; color:white; margin-bottom:4px; }
+.note-desc { font-size:12.5px; color:rgba(255,255,255,0.55); line-height:1.6; }
+
+/* ══ Modal ══ */
+.modal-ov { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.78); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
+.modal-ov.open { display:flex; }
+.mcard { background:linear-gradient(135deg,#0D1F3C,#112B50); border:1px solid rgba(0,170,221,0.25); border-radius:20px; width:90%; max-width:520px; overflow:hidden; position:relative; max-height:90vh; overflow-y:auto; }
+.mimg { width:100%; height:210px; object-fit:cover; display:block; }
+.mimg2 { display:grid; grid-template-columns:1fr 1fr; height:180px; }
+.mimg2 img { width:100%; height:100%; object-fit:cover; display:block; }
+.mbody { padding:22px 24px; }
+.mtitle { font-size:21px; font-weight:900; color:white; margin-bottom:5px; }
+.mprice { color:var(--sky); font-size:15px; font-weight:700; margin-bottom:4px; }
+.mnote { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:14px; }
+.mdesc { color:rgba(255,255,255,0.75); font-size:13.5px; line-height:1.85; margin-bottom:16px; }
+.mtags { display:flex; flex-wrap:wrap; gap:7px; }
+.mtag { background:rgba(0,170,221,0.12); border:1px solid rgba(0,170,221,0.28); color:var(--sky); padding:3px 11px; border-radius:20px; font-size:11.5px; }
+.mclose { position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.45); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:17px; line-height:30px; text-align:center; }
+.mclose:hover { background:rgba(255,255,255,0.18); }
+.info-btn { background:rgba(0,170,221,0.15); border:1px solid rgba(0,170,221,0.5); color:var(--sky); border-radius:20px; cursor:pointer; font-size:11.5px; font-weight:700; flex-shrink:0; display:inline-flex; align-items:center; gap:3px; padding:3px 10px; margin-left:8px; transition:background 0.2s, border-color 0.2s; vertical-align:middle; white-space:nowrap; }
+.info-btn:hover { background:rgba(0,170,221,0.3); border-color:var(--sky); }
+
+/* ══ S8 聯絡 ══ */
+#s8 { text-align:center; }
+#s8 h2 { font-size:clamp(26px,3.8vw,48px); font-weight:900; color:white; margin-bottom:10px; }
+#s8 h2 em { color:var(--sky); font-style:normal; }
+.tag2 { font-size:17px; color:rgba(255,255,255,0.48); margin-bottom:40px; }
+.cgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; max-width:680px; }
+.citem2 { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px; }
+.cico { font-size:26px; margin-bottom:10px; }
+.clabel { font-size:11px; color:rgba(255,255,255,0.36); margin-bottom:5px; letter-spacing:1px; }
+.cval { font-size:14px; color:white; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="viewport">
+<div class="track" id="track">
+
+<!-- ══ S1 封面 ══ -->
+<div class="slide" id="s1">
+  <div class="bdeco"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <circle cx="120" cy="180" r="110" fill="none" stroke="rgba(0,170,221,0.07)" stroke-width="2"/>
+    <circle cx="1320" cy="130" r="75" fill="none" stroke="rgba(0,170,221,0.09)" stroke-width="1.5"/>
+    <circle cx="1000" cy="710" r="140" fill="none" stroke="rgba(0,87,184,0.07)" stroke-width="2"/>
+    <circle cx="200" cy="730" r="55" fill="none" stroke="rgba(0,170,221,0.08)" stroke-width="1"/>
+  </svg></div>
+  <div class="stag">ESG 藝術公益合作提案</div>
+  <h1>讓您企業的善意<br>變成孩子臉上的<em>笑容</em></h1>
+  <p>世界紀錄泡泡藝術 × 企業社會責任<br>一場活動，同時完成 ESG 目標與在地公益</p>
+  <div class="brand">
+    <div class="logo-wrap"><img src="logo.png" alt="bobojoi"></div>
+    <div>
+      <div class="brand-name">泡泡家族</div>
+      <div class="brand-sub">玩水娛樂股份有限公司 ｜ bobojoi.com</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S2 關於我們 ══ -->
+<div class="slide">
+  <div class="box">
+    <div class="lbl">ABOUT US</div>
+    <div class="h1">泡泡，是一門嚴肅的藝術</div>
+    <div class="g2">
+      <div>
+        <p class="lead">泡泡家族深耕泡泡藝術超過 <strong style="color:white">15 年</strong>，由世界紀錄保持人蘇仲太創立。2012 年亮相後，台灣泡泡表演市場從此蓬勃發展，我們是那個讓整個產業誕生的原點。</p>
+        <div class="badges">
+          <span class="badge">🏆 文策院認證優質團隊</span>
+          <span class="badge">🌍 20 項世界紀錄</span>
+          <span class="badge">🔬 超級史萊姆發明專利</span>
+          <span class="badge">🎯 特教友善活動</span>
+        </div>
+        <div class="stats3">
+          <div class="stat"><div class="sn">20</div><div class="sl">泡泡世界紀錄</div></div>
+          <div class="stat"><div class="sn">15+</div><div class="sl">年深耕泡泡藝術</div></div>
+          <div class="stat"><div class="sn">100%</div><div class="sl">客戶滿意度</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="award-photo"><img src="圖片素材/照片/IMG_9274.jpg" alt="文策院獲獎"></div>
+        <div class="award-lbl">▲ TAICCA 文策院加速器 獲獎認證</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3 ESG ══ -->
+<div class="slide">
+  <div class="box">
+    <div class="lbl">WHY BOBOJOI × ESG</div>
+    <div class="h1">一場泡泡活動，三個維度的 ESG 貢獻</div>
+    <div class="esg3">
+      <div class="ecard e"><div class="ebig">E</div><div class="et">E</div><div class="es">Environment 環境</div>
+        <ul>
+          <li>以科學教育啟蒙孩子的環保意識</li>
+          <li>表面張力實驗具象化物理概念</li>
+          <li>無毒安全材料，示範友善環境理念</li>
+        </ul>
+      </div>
+      <div class="ecard s"><div class="ebig">S</div><div class="et">S</div><div class="es">Social 社會</div>
+        <ul>
+          <li>服務特教孩童，實踐藝術平權</li>
+          <li>親子共融，打造零壓力體驗空間</li>
+          <li>協助情緒調節，建立孩子自信心</li>
+          <li>在地公益合作，深耕社區關係</li>
+        </ul>
+      </div>
+      <div class="ecard g"><div class="ebig">G</div><div class="et">G</div><div class="es">Governance 治理</div>
+        <ul>
+          <li>完整結案報告附照片與成效說明</li>
+          <li>可直接納入企業 ESG 年報</li>
+          <li>量化數據：服務人數、家庭數</li>
+          <li>第三方公益單位背書</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S4 服務方案 ══ -->
+<div class="slide">
+  <div class="box">
+    <div class="lbl">SERVICES</div>
+    <div class="h1">三大模組，自由搭配組合</div>
+    <div class="scards">
+      <div class="scard">
+        <div class="sico">🎭</div>
+        <div class="sname">舞台互動泡泡秀</div>
+        <div class="sdesc">由世界紀錄保持人蘇仲太親自演出，結合唱跳互動與視覺美感，適合大型公益活動壓軸節目。</div>
+        <div class="sprice">NT$ 20,000 <span>起</span></div>
+        <div class="snote">適合人數：50 ~ 500 人</div>
+      </div>
+      <div class="scard">
+        <div class="sico">📖</div>
+        <div class="sname">泡泡故事屋</div>
+        <div class="sdesc">沉浸式劇場《王國的危機》，透過情節引導孩子學習共感與情緒調節，適合幼兒及特教族群。</div>
+        <div class="sprice">NT$ 15,000 <span>起</span></div>
+        <div class="snote">適合人數：50 人以下</div>
+      </div>
+      <div class="scard">
+        <div class="sico">🧪</div>
+        <span class="pat">發明專利</span>
+        <div class="sname">手作工坊</div>
+        <div class="sdesc">超級史萊姆（觸覺探索）或泡泡精華液，每位孩子親手製作帶回家，寓教於樂。</div>
+        <div class="sprice">NT$ 400 <span>~ 600 / 人</span></div>
+        <div class="snote">史萊姆 600 元｜泡泡精華液 400 元</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S5 成功案例 ══ -->
+<div class="slide" id="s5" style="padding:36px 72px">
+  <div class="box">
+    <div class="lbl">CASE STUDY</div>
+    <div class="h1" style="margin-bottom:16px">成功案例：頎邦科技 × 仁愛基金會</div>
+    <div class="case-top">
+      <div class="cleft">
+        <div class="cco">頎邦科技（CHIPBOND）</div>
+        <div class="cpa">捐助企業 × 仁愛基金會公益活動 · 2026.05.23</div>
+        <div class="camount">$70,000+</div>
+        <div class="cal">活動總金額（新台幣）</div>
+        <div class="cmeta">
+          <div class="mrow"><div class="mdot"></div>新竹仁愛基金會 · 三大模組完整出動</div>
+          <div class="mrow"><div class="mdot"></div>文策院推薦促成合作</div>
+        </div>
+      </div>
+      <div class="cright">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="rcard"><div class="rn">70</div><div class="rl">組家庭手作工坊</div></div>
+          <div class="rcard g"><div class="rn">350</div><div class="rl">人觀賞舞台互動秀</div></div>
+        </div>
+        <div class="qt-card">
+          <div class="qt">「活動氣氛十分歡愉熱鬧，孩子們展現高度的專注與投入，成功讓民眾與親子留下了難忘的美好回憶。」</div>
+          <div class="qs">— 仁愛基金會 活動回饋</div>
+        </div>
+      </div>
+    </div>
+    <div class="photo-strip">
+      <div class="ph"><img src="頎邦科技贊助泡泡家族親子活動_仁愛基金會 (87).JPG" alt="活動現場 1"></div>
+      <div class="ph"><img src="頎邦科技贊助泡泡家族親子活動_仁愛基金會 (104).JPG" alt="活動現場 2"></div>
+      <div class="ph"><img src="頎邦科技贊助泡泡家族親子活動_仁愛基金會 (105).JPG" alt="活動現場 3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S6 互動報價試算 ══ -->
+<div class="slide">
+  <div class="box">
+    <div class="lbl" style="text-align:center">PRICING CALCULATOR</div>
+    <div class="h1" style="text-align:center;margin-bottom:18px">互動報價試算</div>
+    <div class="calc-wrap">
+      <div class="calc-left">
+
+        <div class="citem" id="ci-show">
+          <div class="citem-top">
+            <div>
+              <div class="citem-name">🎭 舞台互動泡泡秀 <button class="info-btn" onclick="openModal('m-show')">▶ 了解更多</button></div>
+              <div class="citem-desc">唱跳互動 · 適合 50 ~ 500 人</div>
+            </div>
+            <label class="tog"><input type="checkbox" id="tog-show" onchange="calc()"><span class="tog-slider"></span></label>
+          </div>
+          <div id="price-show-row" style="display:none">
+            <div class="price-row">
+              <label>報價 NT$</label>
+              <input type="number" class="price-input" id="price-show" value="25000" min="25000" step="1000" oninput="calc()">
+              <span class="price-hint">25,000 起</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="citem" id="ci-su">
+          <div class="citem-top">
+            <div>
+              <div class="citem-name">⭐ 泡泡藝術家蘇仲太 親自演出 <button class="info-btn" onclick="openModal('m-su')">▶ 了解更多</button></div>
+              <div class="citem-desc">限室內 · 另計</div>
+            </div>
+            <label class="tog"><input type="checkbox" id="tog-su" onchange="calc()"><span class="tog-slider"></span></label>
+          </div>
+          <div id="price-su-row" style="display:none">
+            <div class="price-row">
+              <label>報價 NT$</label>
+              <input type="number" class="price-input" id="price-su" value="30000" min="30000" step="1000" oninput="calc()">
+              <span class="price-hint">30,000 起</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="citem" id="ci-slime">
+          <div class="citem-top">
+            <div>
+              <div class="citem-name">🧪 手作超級史萊姆 <span style="font-size:10px;color:var(--accent)">發明專利</span> <button class="info-btn" onclick="openModal('m-slime')">▶ 了解更多</button></div>
+              <div class="citem-desc">600 元 / 人</div>
+            </div>
+            <label class="tog"><input type="checkbox" id="tog-slime" onchange="calc()"><span class="tog-slider"></span></label>
+          </div>
+          <div id="qty-slime" style="display:none">
+            <div class="qty-row">
+              <label>人數</label>
+              <input type="number" class="qty-input" id="n-slime" value="50" min="1" oninput="calc()">
+              <span class="qty-sub" id="sub-slime">NT$ 30,000</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="citem" id="ci-bubble">
+          <div class="citem-top">
+            <div>
+              <div class="citem-name">🫧 手作泡泡精華液 <button class="info-btn" onclick="openModal('m-bubble')">▶ 了解更多</button></div>
+              <div class="citem-desc">400 元 / 人</div>
+            </div>
+            <label class="tog"><input type="checkbox" id="tog-bubble" onchange="calc()"><span class="tog-slider"></span></label>
+          </div>
+          <div id="qty-bubble" style="display:none">
+            <div class="qty-row">
+              <label>人數</label>
+              <input type="number" class="qty-input" id="n-bubble" value="50" min="1" oninput="calc()">
+              <span class="qty-sub" id="sub-bubble">NT$ 20,000</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="calc-right">
+        <div class="summary-title">PRICE SUMMARY</div>
+        <div class="summary-rows">
+          <div class="srow hidden" id="sr-show"><span class="sn2">舞台互動泡泡秀</span><span class="sv" id="sv-show">NT$ 25,000</span></div>
+          <div class="srow hidden" id="sr-su"><span class="sn2">蘇仲太親自演出</span><span class="sv" id="sv-su">NT$ 30,000</span></div>
+          <div class="srow hidden" id="sr-slime"><span class="sn2">手作超級史萊姆</span><span class="sv" id="sv-slime">NT$ 30,000</span></div>
+          <div class="srow hidden" id="sr-bubble"><span class="sn2">手作泡泡精華液</span><span class="sv" id="sv-bubble">NT$ 20,000</span></div>
+        </div>
+        <hr class="divider">
+        <div class="total-row">
+          <span class="total-label">預估合計</span>
+          <span class="total-num" id="total">NT$ 0</span>
+        </div>
+        <div class="calc-note">
+          ※ 此為參考試算，最終報價依活動規模調整<br>
+          ※ 雙北免車馬費，外縣市另計
+        </div>
+        <a class="cta-btn" href="https://line.me/R/ti/p/%40680yiein" target="_blank" style="display:block;text-decoration:none">取得正式報價 →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S7 合作流程 ══ -->
+<div class="slide">
+  <div class="box">
+    <div class="lbl">PROCESS</div>
+    <div class="h1">合作流程</div>
+    <div class="flow5" style="margin-bottom:36px">
+      <div class="fstep"><div class="fnum">1</div><div class="flabel">需求確認</div><div class="fsub">人數、日期<br>預算方向</div></div>
+      <div class="fstep"><div class="fnum">2</div><div class="flabel">提供報價</div><div class="fsub">客製化<br>方案規劃</div></div>
+      <div class="fstep"><div class="fnum">3</div><div class="flabel">簽約確認</div><div class="fsub">合約保障<br>雙方權益</div></div>
+      <div class="fstep"><div class="fnum">4</div><div class="flabel">活動執行</div><div class="fsub">專業到場<br>全程服務</div></div>
+      <div class="fstep"><div class="fnum">5</div><div class="flabel">結案報告</div><div class="fsub">ESG 成效<br>照片文件</div></div>
+    </div>
+    <div class="notes-grid">
+      <div class="note-card">
+        <div class="note-ico">📍</div>
+        <div><div class="note-title">服務範圍</div><div class="note-desc">基地位於新北板橋，雙北免車馬費，全台均可服務</div></div>
+      </div>
+      <div class="note-card">
+        <div class="note-ico">🖥️</div>
+        <div><div class="note-title">設備說明</div><div class="note-desc">主辦方需提供 70 吋以上電視，可服務約 50 人，如需租借另計</div></div>
+      </div>
+      <div class="note-card">
+        <div class="note-ico">📋</div>
+        <div><div class="note-title">結案報告</div><div class="note-desc">活動後 5 個工作天內交付完整 ESG 成效報告，可納入年報</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S8 聯絡 ══ -->
+<div class="slide" id="s8">
+  <div class="bdeco"><svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <circle cx="200" cy="150" r="90" fill="none" stroke="rgba(0,170,221,0.07)" stroke-width="2"/>
+    <circle cx="1200" cy="700" r="120" fill="none" stroke="rgba(0,87,184,0.08)" stroke-width="2"/>
+  </svg></div>
+  <h2>準備好讓泡泡<br>為您的 <em>ESG</em> 加分了嗎？</h2>
+  <div class="tag2">一通電話，我們為您規劃專屬方案</div>
+  <div class="cgrid">
+    <div class="citem2" style="cursor:pointer" onclick="window.open('https://bobojoi.com','_blank')"><div class="cico">🌐</div><div class="clabel">WEBSITE</div><div class="cval" style="color:var(--sky)">bobojoi.com</div></div>
+    <div class="citem2"><div class="cico">📍</div><div class="clabel">BASE</div><div class="cval">新北市板橋區</div></div>
+    <div class="citem2" style="cursor:pointer" onclick="window.open('https://line.me/R/ti/p/%40680yiein','_blank')"><div class="cico">✉️</div><div class="clabel">CONTACT</div><div class="cval" style="color:var(--sky)">聯絡我們</div></div>
+  </div>
+</div>
+
+</div></div>
+
+<!-- ══ Modals ══ -->
+<div class="modal-ov" id="m-show" onclick="closeModal(event,this)">
+  <div class="mcard">
+    <button class="mclose" onclick="closeModalById('m-show')">✕</button>
+    <img class="mimg" src="頎邦科技贊助泡泡家族親子活動_仁愛基金會 (104).JPG" alt="舞台互動泡泡秀">
+    <div class="mbody">
+      <div class="mtitle">🎭 舞台互動泡泡秀</div>
+      <div class="mprice">NT$ 25,000 起</div>
+      <div class="mdesc">由專業泡泡表演團隊帶來充滿活力的唱跳互動泡泡秀，結合音樂律動與視覺泡泡美學，帶動全場歡愉氣氛。適合企業公益日、親子活動等大型場合，是凝聚人心的壓軸節目。</div>
+      <div class="mtags">
+        <span class="mtag">適合 50 ~ 500 人</span>
+        <span class="mtag">唱跳互動</span>
+        <span class="mtag">ESG 社會貢獻</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-su" onclick="closeModal(event,this)">
+  <div class="mcard">
+    <img class="mimg" src="IMG_9342.jpg" alt="蘇仲太" style="object-position:center;aspect-ratio:1/1;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:0">
+    <div class="mbody">
+      <div class="mtitle">⭐ 泡泡藝術家蘇仲太 親自演出</div>
+      <div class="mprice">NT$ 30,000 起</div>
+      <div class="mnote">⚠️ 限室內演出 · 與舞台互動泡泡秀分開計算</div>
+      <div class="mdesc">由台灣唯一榮獲 20 項金氏世界紀錄的泡泡藝術家蘇仲太親自登台，呈現頂級泡泡藝術技法。每一幕都是可遇不可求的現場視覺奇景，讓您的活動留下無可取代的印記。</div>
+      <div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+        <img src="DSC01034.jpg" alt="金氏世界紀錄" style="width:100px;height:65px;object-fit:cover;border-radius:6px;flex-shrink:0">
+        <span style="font-size:0.82rem;color:#94b8e0;line-height:1.5">榮獲 20 項金氏世界紀錄，是台灣泡泡藝術的最高代名詞。</span>
+      </div>
+      <div class="mtags">
+        <span class="mtag">20 項金氏世界紀錄</span>
+        <span class="mtag">限室內</span>
+        <span class="mtag">頂級視覺體驗</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-slime" onclick="closeModal(event,this)">
+  <div class="mcard">
+    <img class="mimg" src="泡泡故事屋+手作活動/泡泡故事屋及手作活動 (34).jpg" alt="手作超級史萊姆">
+    <div class="mbody">
+      <div class="mtitle">🧪 手作超級史萊姆</div>
+      <div class="mprice">NT$ 600 / 人</div>
+      <div class="mdesc">採用發明專利配方，讓每位孩子親手製作屬於自己的超級史萊姆。觸感柔軟、可塑性強，透過非牛頓流體原理帶來科學啟蒙體驗。每人一份成品帶回家，是最受歡迎的活動伴手禮。</div>
+      <div class="mtags">
+        <span class="mtag">發明專利</span>
+        <span class="mtag">科學啟蒙</span>
+        <span class="mtag">每人帶走成品</span>
+        <span class="mtag">ESG 教育貢獻</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-bubble" onclick="closeModal(event,this)">
+  <div class="mcard">
+    <img class="mimg" src="IMG_8337.JPG" alt="手作泡泡精華液">
+    <div class="mbody">
+      <div class="mtitle">🫧 手作泡泡精華液</div>
+      <div class="mprice">NT$ 400 / 人</div>
+      <div class="mdesc">孩子親手調製屬於自己的安全無毒超強泡泡水，可自由選色、加入香精，打造獨一無二的專屬配方。成品能吹出超大超強的泡泡，帶回家後還能繼續玩，是最受孩子喜愛的帶回家禮物。</div>
+      <div class="mtags">
+        <span class="mtag">安全無毒配方</span>
+        <span class="mtag">可調色</span>
+        <span class="mtag">可加香精</span>
+        <span class="mtag">每人帶走成品</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav" id="nav"></div>
+<div class="hint">← → 鍵盤切換</div>
+
+<script>
+const track = document.getElementById('track');
+const slides = document.querySelectorAll('.slide');
+const navEl = document.getElementById('nav');
+const total = slides.length;
+let cur = 0;
+
+const prevBtn = document.createElement('button');
+prevBtn.className = 'nbtn'; prevBtn.textContent = '←'; prevBtn.onclick = prev;
+navEl.appendChild(prevBtn);
+
+const dotsWrap = document.createElement('div');
+dotsWrap.style.cssText = 'display:flex;gap:8px;align-items:center';
+navEl.appendChild(dotsWrap);
+
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' on' : '');
+  d.onclick = () => go(i);
+  dotsWrap.appendChild(d);
+});
+
+const counter = document.createElement('span');
+counter.className = 'ncount'; counter.textContent = '1 / ' + total;
+navEl.appendChild(counter);
+
+const nextBtn = document.createElement('button');
+nextBtn.className = 'nbtn'; nextBtn.textContent = '→'; nextBtn.onclick = next;
+navEl.appendChild(nextBtn);
+
+function go(n) {
+  cur = Math.max(0, Math.min(n, total - 1));
+  track.style.transform = 'translateX(-' + (cur * 100) + 'vw)';
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  counter.textContent = (cur + 1) + ' / ' + total;
+}
+function next() { go(cur + 1); }
+function prev() { go(cur - 1); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next();
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prev();
+});
+
+function calc() {
+  const show   = document.getElementById('tog-show').checked;
+  const su     = document.getElementById('tog-su').checked;
+  const slime  = document.getElementById('tog-slime').checked;
+  const bubble = document.getElementById('tog-bubble').checked;
+
+  const showAmt   = show  ? (parseInt(document.getElementById('price-show').value) || 0) : 0;
+  const suAmt     = su    ? (parseInt(document.getElementById('price-su').value)   || 0) : 0;
+  const nSlime    = parseInt(document.getElementById('n-slime').value)  || 0;
+  const nBubble   = parseInt(document.getElementById('n-bubble').value) || 0;
+  const slimeAmt  = slime  ? nSlime  * 600 : 0;
+  const bubbleAmt = bubble ? nBubble * 400 : 0;
+
+  document.getElementById('price-show-row').style.display = show  ? 'block' : 'none';
+  document.getElementById('price-su-row').style.display   = su    ? 'block' : 'none';
+  document.getElementById('qty-slime').style.display      = slime  ? 'block' : 'none';
+  document.getElementById('qty-bubble').style.display     = bubble ? 'block' : 'none';
+
+  ['show','su','slime','bubble'].forEach(k => {
+    document.getElementById('ci-'+k).classList.toggle('active', document.getElementById('tog-'+k).checked);
+  });
+
+  document.getElementById('sub-slime').textContent  = 'NT$ ' + slimeAmt.toLocaleString();
+  document.getElementById('sub-bubble').textContent = 'NT$ ' + bubbleAmt.toLocaleString();
+  document.getElementById('sv-show').textContent    = 'NT$ ' + showAmt.toLocaleString();
+  document.getElementById('sv-su').textContent      = 'NT$ ' + suAmt.toLocaleString();
+  document.getElementById('sv-slime').textContent   = 'NT$ ' + slimeAmt.toLocaleString();
+  document.getElementById('sv-bubble').textContent  = 'NT$ ' + bubbleAmt.toLocaleString();
+
+  document.getElementById('sr-show').classList.toggle('hidden',   !show);
+  document.getElementById('sr-su').classList.toggle('hidden',     !su);
+  document.getElementById('sr-slime').classList.toggle('hidden',  !slime);
+  document.getElementById('sr-bubble').classList.toggle('hidden', !bubble);
+
+  const t = showAmt + suAmt + slimeAmt + bubbleAmt;
+  document.getElementById('total').textContent = 'NT$ ' + t.toLocaleString();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModalById(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModal(e, overlay) {
+  if (e.target === overlay) closeModalById(overlay.id);
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-ov.open').forEach(m => m.classList.remove('open'));
+    document.body.style.overflow = '';
+  }
+});
+</script>
+</body>
+</html>
